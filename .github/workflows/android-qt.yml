@@ -1,0 +1,100 @@
+name: Android Qt
+
+on:
+  push:
+    branches:
+      - agent/android-qt-port
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'source-code/1/**'
+      - 'source-code/2/**'
+      - 'source-code/B1/**'
+      - '.github/workflows/android-qt.yml'
+  workflow_dispatch:
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install host build tools
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
+          ninja --version
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager \
+            'platform-tools' \
+            'platforms;android-35' \
+            'platforms;android-36' \
+            'build-tools;36.0.0' \
+            'ndk;26.1.10909125' \
+            'cmake;3.22.1'
+
+      - name: Install Qt for Android
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: linux
+          target: android
+          arch: android_arm64_v8a
+          modules: 'qt5compat'
+          cache: true
+
+      - name: Configure
+        shell: bash
+        env:
+          ANDROID_NDK_ROOT: ${{ env.ANDROID_HOME }}/ndk/26.1.10909125
+        run: |
+          qt-cmake -S android -B build/android -GNinja \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-28 \
+            -DANDROID_SDK_ROOT="$ANDROID_HOME" \
+            -DANDROID_NDK="$ANDROID_NDK_ROOT" \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build APK
+        shell: bash
+        run: |
+          set -o pipefail
+          cmake --build build/android --target apk --parallel 2 2>&1 | tee android-build.log
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-log
+          path: android-build.log
+          if-no-files-found: warn
+
+      - name: Locate APK
+        if: always()
+        run: find build/android -type f -name '*.apk' -print || true
+
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ykw-editors-android-arm64
+          path: build/android/**/*.apk
+          if-no-files-found: error

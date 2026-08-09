@@ -34,7 +34,11 @@ YWCipher::YWCipher(quint32 seed, int count) :
         if (r1 != r2) {
             r1 = this->table.at(r1);
             r2 = this->table.at(r2);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            this->table.swapItemsAt(r1, r2);
+#else
             this->table.swap(r1, r2);
+#endif
         }
     }
 }
