@@ -83,7 +83,11 @@ function(ykw_prepare_youkaitab editor_id source_dir out_cpp)
 endfunction()
 
 function(ykw_configure_plugin target source_dir wrapper)
-  add_library(${target} SHARED ${ARGN} "${wrapper}")
+  # AUTOUIC only scans files that are target sources. The legacy projects put
+  # ui_*.h includes in headers (for example youkaitab.h), so add all legacy
+  # headers explicitly to ensure uic runs before moc/compilation needs them.
+  file(GLOB _legacy_headers CONFIGURE_DEPENDS "${source_dir}/*.h" "${source_dir}/QHexEdit/*.h")
+  add_library(${target} SHARED ${ARGN} "${wrapper}" ${_legacy_headers})
   target_include_directories(${target} PRIVATE "${source_dir}" "${source_dir}/QHexEdit")
   target_link_libraries(${target} PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Core5Compat)
   # QTextCodec moved out of QtCore in Qt 6. The legacy sources relied on
