@@ -8,11 +8,21 @@
 
 namespace {
 QTranslator *g_translator = nullptr;
+
+void activateResources()
+{
+    Q_INIT_RESOURCE(resources);
+}
+
+void deactivateResources()
+{
+    Q_CLEANUP_RESOURCE(resources);
+}
 }
 
 extern "C" Q_DECL_EXPORT void ykw_editor1_activate()
 {
-    Q_INIT_RESOURCE(resources);
+    activateResources();
     if (!g_translator) {
         g_translator = new QTranslator(qApp);
         const QString resource = QStringLiteral(":/translations/translations/qt_%1.qm")
@@ -30,7 +40,7 @@ extern "C" Q_DECL_EXPORT void ykw_editor1_deactivate()
         delete g_translator;
         g_translator = nullptr;
     }
-    Q_CLEANUP_RESOURCE(resources);
+    deactivateResources();
 }
 
 extern "C" Q_DECL_EXPORT QWidget *ykw_editor1_create()
