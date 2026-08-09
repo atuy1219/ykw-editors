@@ -53,6 +53,10 @@ function(ykw_configure_plugin target source_dir wrapper)
   add_library(${target} SHARED ${ARGN} "${wrapper}")
   target_include_directories(${target} PRIVATE "${source_dir}" "${source_dir}/QHexEdit")
   target_link_libraries(${target} PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Core5Compat)
+  # QTextCodec moved out of QtCore in Qt 6. The legacy sources relied on
+  # <QtCore> pulling it in implicitly, so expose the Core5Compat header to every
+  # translation unit without modifying the original desktop sources.
+  target_compile_options(${target} PRIVATE "SHELL:-include QTextCodec")
   # Each legacy editor contains many identically named classes and YW2/B1 both
   # statically link Crypto++. Bind references locally and hide archive symbols.
   target_link_options(${target} PRIVATE "-Wl,-Bsymbolic" "-Wl,--exclude-libs,ALL")
