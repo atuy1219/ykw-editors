@@ -131,7 +131,9 @@ ykw_configure_plugin(ykw_editor_b1 "${YWB1}" "${CMAKE_CURRENT_LIST_DIR}/plugins/
 target_link_libraries(ykw_editor_b1 PRIVATE ${YKW_CRYPTOPP_TARGET})
 
 qt_add_executable(ykw_editors_android MANUAL_FINALIZATION "${CMAKE_CURRENT_LIST_DIR}/src/main.cpp" "${CMAKE_CURRENT_LIST_DIR}/src/launcherwindow.cpp" "${CMAKE_CURRENT_LIST_DIR}/src/launcherwindow.h")
-target_link_libraries(ykw_editors_android PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
+# Link Core5Compat directly so androiddeployqt packages the runtime needed by
+# all three legacy editor libraries (QTextCodec is provided by this module).
+target_link_libraries(ykw_editors_android PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Core5Compat)
 add_dependencies(ykw_editors_android ykw_editor1 ykw_editor2 ykw_editor_b1)
 if(ANDROID)
  set_target_properties(ykw_editors_android PROPERTIES
