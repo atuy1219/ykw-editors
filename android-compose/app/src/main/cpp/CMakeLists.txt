@@ -27,5 +27,9 @@ else()
 endif()
 
 add_library(ykw_save_core SHARED native_save_core.cpp)
+# cryptopp-cmake exposes its generated `cryptopp` header directory itself.
+# The legacy code and this JNI core use the conventional <cryptopp/...> form,
+# so also expose the parent build directory as an include root.
+target_include_directories(ykw_save_core PRIVATE "${CMAKE_BINARY_DIR}/_deps/cryptopp-cmake-build")
 target_link_libraries(ykw_save_core PRIVATE ${YKW_CRYPTOPP_TARGET})
 target_compile_options(ykw_save_core PRIVATE -Wall -Wextra -Wpedantic)
