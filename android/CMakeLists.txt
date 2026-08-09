@@ -43,6 +43,13 @@ function(ykw_prepare_qhexedit editor_id source_dir out_cpp out_private_cpp)
   string(REPLACE "fm.width(" "fm.horizontalAdvance(" _private "${_private}")
   string(REPLACE "event->delta()" "event->angleDelta().y()" _private "${_private}")
   string(REPLACE "if(event->orientation() == Qt::Vertical)" "if(event->angleDelta().x() == 0)" _private "${_private}")
+  # Qt 6 intentionally has multiple QChar numeric constructors, so the old
+  # implicit int/uchar -> QChar conversions in QHexEdit are ambiguous. Preserve
+  # the original byte/code-unit semantics with an explicit ushort conversion.
+  string(REPLACE "uchar val = static_cast<uchar>(QString(key).toUInt(NULL, 16));" "uchar val = static_cast<uchar>(QString(QChar(static_cast<ushort>(key))).toUInt(nullptr, 16));" _private "${_private}")
+  string(REPLACE "if(QChar(b).isPrint())" "if(QChar(static_cast<ushort>(b)).isPrint())" _private "${_private}")
+  string(REPLACE "w = fm.horizontalAdvance(b);" "w = fm.horizontalAdvance(QChar(static_cast<ushort>(b)));" _private "${_private}")
+  string(REPLACE "s = QString(b);" "s = QString(QChar(static_cast<ushort>(b)));" _private "${_private}")
   file(WRITE "${_out_dir}/qhexeditprivate.cpp" "${_private}")
 
   set(${out_cpp} "${_out_dir}/qhexedit.cpp" PARENT_SCOPE)
