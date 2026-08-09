@@ -35,13 +35,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-private enum class GameKind(val nativeId: Int, val label: String) {
+internal enum class GameKind(val nativeId: Int, val label: String) {
     YW1(1, "妖怪ウォッチ1"),
     YW2(2, "妖怪ウォッチ2"),
     BUSTERS(3, "妖怪ウォッチバスターズ")
 }
 
-object NativeSaveBridge {
+internal object NativeSaveBridge {
     init {
         System.loadLibrary("ykw_save_core")
     }
@@ -159,11 +159,16 @@ private fun SaveEditorScreen() {
         }
         Text(saveName?.let { "選択中: $it (${saveData?.size ?: 0} bytes)" } ?: "未選択")
 
-        if (game == GameKind.BUSTERS) {
+        if (game != GameKind.YW1) {
             OutlinedButton(onClick = { openHead.launch(arrayOf("*/*")) }) {
                 Text("head.yw / head.yw_g を選択")
             }
-            Text(headName?.let { "head: $it (${headData?.size ?: 0} bytes)" } ?: "暗号化Bustersセーブではheadファイルが必要です")
+            val missingHeadMessage = when (game) {
+                GameKind.YW2 -> "必要な形式のYW2セーブではhead.ywを指定できます"
+                GameKind.BUSTERS -> "暗号化Bustersセーブではhead.yw / head.yw_gが必要です"
+                GameKind.YW1 -> ""
+            }
+            Text(headName?.let { "head: $it (${headData?.size ?: 0} bytes)" } ?: missingHeadMessage)
         }
 
         HorizontalDivider()
