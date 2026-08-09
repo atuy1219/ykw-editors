@@ -67,6 +67,21 @@ function(ykw_prepare_savemanager editor_id source_dir out_cpp)
   set(${out_cpp} "${_out_dir}/savemanager.cpp" PARENT_SCOPE)
 endfunction()
 
+# qsrand()/qrand() were removed in Qt 6. The IV repair routines only need a
+# locally seeded pseudo-random bucket choice, so use QRandomGenerator while
+# preserving the old millisecond-based seeding behavior.
+function(ykw_prepare_youkaitab editor_id source_dir out_cpp)
+  set(_out_dir "${YKW_COMPAT_DIR}/${editor_id}")
+  file(MAKE_DIRECTORY "${_out_dir}")
+  file(READ "${source_dir}/youkaitab.cpp" _youkaitab)
+  string(REPLACE "#include <QTime>" "#include <QTime>\n#include <QRandomGenerator>" _youkaitab "${_youkaitab}")
+  string(REPLACE "qsrand(QTime::currentTime().msec());" "QRandomGenerator rng(static_cast<quint32>(QTime::currentTime().msec()));" _youkaitab "${_youkaitab}")
+  string(REPLACE "qrand() % 5" "rng.bounded(5)" _youkaitab "${_youkaitab}")
+  string(REPLACE "qrand() % 4" "rng.bounded(4)" _youkaitab "${_youkaitab}")
+  file(WRITE "${_out_dir}/youkaitab.cpp" "${_youkaitab}")
+  set(${out_cpp} "${_out_dir}/youkaitab.cpp" PARENT_SCOPE)
+endfunction()
+
 function(ykw_configure_plugin target source_dir wrapper)
   add_library(${target} SHARED ${ARGN} "${wrapper}")
   target_include_directories(${target} PRIVATE "${source_dir}" "${source_dir}/QHexEdit")
@@ -92,8 +107,9 @@ ykw_configure_plugin(ykw_editor1 "${YW1}" "${CMAKE_CURRENT_LIST_DIR}/plugins/yw1
 set(YW2 "${YKW_ROOT}/source-code/2")
 ykw_prepare_qhexedit(yw2 "${YW2}" YW2_QHEXEDIT YW2_QHEXEDIT_PRIVATE)
 ykw_prepare_savemanager(yw2 "${YW2}" YW2_SAVEMANAGER)
+ykw_prepare_youkaitab(yw2 "${YW2}" YW2_YOUKAITAB)
 ykw_configure_plugin(ykw_editor2 "${YW2}" "${CMAKE_CURRENT_LIST_DIR}/plugins/yw2_plugin.cpp"
- "${YW2}/mainwindow.cpp" "${YW2}/version_dialog.cpp" "${YW2_SAVEMANAGER}" "${YW2}/xorshift.cpp" "${YW2}/ywcipher.cpp" "${YW2}/ccmcipher.cpp" "${YW2}/crc32.cpp" "${YW2}/error.cpp" "${YW2}/tab.cpp" "${YW2}/listtab.cpp" "${YW2}/youkaitab.cpp" "${YW2}/gamedata.cpp" "${YW2}/gameconfig.cpp" "${YW2}/manualeditdialog.cpp"
+ "${YW2}/mainwindow.cpp" "${YW2}/version_dialog.cpp" "${YW2_SAVEMANAGER}" "${YW2}/xorshift.cpp" "${YW2}/ywcipher.cpp" "${YW2}/ccmcipher.cpp" "${YW2}/crc32.cpp" "${YW2}/error.cpp" "${YW2}/tab.cpp" "${YW2}/listtab.cpp" "${YW2_YOUKAITAB}" "${YW2}/gamedata.cpp" "${YW2}/gameconfig.cpp" "${YW2}/manualeditdialog.cpp"
  "${YW2_QHEXEDIT}" "${YW2}/QHexEdit/qhexeditcomments.cpp" "${YW2}/QHexEdit/qhexeditdata.cpp" "${YW2}/QHexEdit/qhexeditdatadevice.cpp" "${YW2}/QHexEdit/qhexeditdatareader.cpp" "${YW2}/QHexEdit/qhexeditdatawriter.cpp" "${YW2}/QHexEdit/qhexedithighlighter.cpp" "${YW2_QHEXEDIT_PRIVATE}" "${YW2}/QHexEdit/sparserangemap.cpp"
  "${YW2}/itemtab.cpp" "${YW2}/equipmenttab.cpp" "${YW2}/importanttab.cpp" "${YW2}/section1tab.cpp" "${YW2}/section.cpp" "${YW2}/section9tab.cpp" "${YW2}/soultab.cpp" "${YW2}/youkaichecklist.cpp" "${YW2}/medalliumtab.cpp"
  "${YW2}/mainwindow.ui" "${YW2}/version_dialog.ui" "${YW2}/manualeditdialog.ui" "${YW2}/section1tab.ui" "${YW2}/section9tab.ui" "${YW2}/equipmenttabform.ui" "${YW2}/importanttabform.ui" "${YW2}/itemtabform.ui" "${YW2}/youkaitabform.ui" "${YW2}/soultabform.ui" "${YW2}/listtab.ui" "${YW2}/medalliumtab.ui" "${YW2}/resources.qrc")
@@ -102,8 +118,9 @@ target_link_libraries(ykw_editor2 PRIVATE ${YKW_CRYPTOPP_TARGET})
 set(YWB1 "${YKW_ROOT}/source-code/B1")
 ykw_prepare_qhexedit(ywb1 "${YWB1}" YWB1_QHEXEDIT YWB1_QHEXEDIT_PRIVATE)
 ykw_prepare_savemanager(ywb1 "${YWB1}" YWB1_SAVEMANAGER)
+ykw_prepare_youkaitab(ywb1 "${YWB1}" YWB1_YOUKAITAB)
 ykw_configure_plugin(ykw_editor_b1 "${YWB1}" "${CMAKE_CURRENT_LIST_DIR}/plugins/ywb1_plugin.cpp"
- "${YWB1}/mainwindow.cpp" "${YWB1}/version_dialog.cpp" "${YWB1_SAVEMANAGER}" "${YWB1}/xorshift.cpp" "${YWB1}/ywcipher.cpp" "${YWB1}/ccmcipher.cpp" "${YWB1}/crc32.cpp" "${YWB1}/error.cpp" "${YWB1}/tab.cpp" "${YWB1}/listtab.cpp" "${YWB1}/youkaitab.cpp" "${YWB1}/gamedata.cpp" "${YWB1}/gameconfig.cpp" "${YWB1}/manualeditdialog.cpp"
+ "${YWB1}/mainwindow.cpp" "${YWB1}/version_dialog.cpp" "${YWB1_SAVEMANAGER}" "${YWB1}/xorshift.cpp" "${YWB1}/ywcipher.cpp" "${YWB1}/ccmcipher.cpp" "${YWB1}/crc32.cpp" "${YWB1}/error.cpp" "${YWB1}/tab.cpp" "${YWB1}/listtab.cpp" "${YWB1_YOUKAITAB}" "${YWB1}/gamedata.cpp" "${YWB1}/gameconfig.cpp" "${YWB1}/manualeditdialog.cpp"
  "${YWB1_QHEXEDIT}" "${YWB1}/QHexEdit/qhexeditcomments.cpp" "${YWB1}/QHexEdit/qhexeditdata.cpp" "${YWB1}/QHexEdit/qhexeditdatadevice.cpp" "${YWB1}/QHexEdit/qhexeditdatareader.cpp" "${YWB1}/QHexEdit/qhexeditdatawriter.cpp" "${YWB1}/QHexEdit/qhexedithighlighter.cpp" "${YWB1_QHEXEDIT_PRIVATE}" "${YWB1}/QHexEdit/sparserangemap.cpp"
  "${YWB1}/itemtab.cpp" "${YWB1}/equipmenttab.cpp" "${YWB1}/importanttab.cpp" "${YWB1}/section1tab.cpp" "${YWB1}/section.cpp" "${YWB1}/section9tab.cpp" "${YWB1}/auratab.cpp" "${YWB1}/soultab.cpp" "${YWB1}/youkaichecklist.cpp" "${YWB1}/medaliumtab.cpp"
  "${YWB1}/mainwindow.ui" "${YWB1}/version_dialog.ui" "${YWB1}/manualeditdialog.ui" "${YWB1}/section1tab.ui" "${YWB1}/section9tab.ui" "${YWB1}/auratab.ui" "${YWB1}/equipmenttabform.ui" "${YWB1}/importanttabform.ui" "${YWB1}/itemtabform.ui" "${YWB1}/soultabform.ui" "${YWB1}/youkaitabform.ui" "${YWB1}/listtab.ui" "${YWB1}/medaliumtab.ui" "${YWB1}/resources.qrc")
