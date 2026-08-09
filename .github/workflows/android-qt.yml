@@ -34,7 +34,7 @@ jobs:
         shell: bash
         run: |
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;26.1.10909125' 'cmake;3.22.1' ninja
+          sdkmanager 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0' 'ndk;26.1.10909125' 'cmake;3.22.1' ninja
 
       - name: Install Qt for Android
         uses: jurplel/install-qt-action@v4
