@@ -8,16 +8,16 @@
 
 namespace {
 QTranslator *g_translator = nullptr;
+}
 
-void activateResources()
+static void activateResources()
 {
     Q_INIT_RESOURCE(resources);
 }
 
-void deactivateResources()
+static void deactivateResources()
 {
     Q_CLEANUP_RESOURCE(resources);
-}
 }
 
 extern "C" Q_DECL_EXPORT void ykw_editor2_activate()
