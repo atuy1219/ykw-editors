@@ -27,14 +27,27 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Install host build tools
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
+          ninja --version
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install Android SDK packages
         shell: bash
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager 'platform-tools' 'platforms;android-35' 'platforms;android-36' 'build-tools;36.0.0' 'ndk;26.1.10909125' 'cmake;3.22.1' ninja
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager \
+            'platform-tools' \
+            'platforms;android-35' \
+            'platforms;android-36' \
+            'build-tools;36.0.0' \
+            'ndk;26.1.10909125' \
+            'cmake;3.22.1'
 
       - name: Install Qt for Android
         uses: jurplel/install-qt-action@v4
