@@ -1,0 +1,74 @@
+name: Android Qt
+
+on:
+  push:
+    branches:
+      - agent/android-qt-port
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'source-code/1/**'
+      - 'source-code/2/**'
+      - 'source-code/B1/**'
+      - '.github/workflows/android-qt.yml'
+  workflow_dispatch:
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;26.1.10909125' 'cmake;3.22.1' ninja
+
+      - name: Install Qt for Android
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: linux
+          target: android
+          arch: android_arm64_v8a
+          modules: 'qt5compat'
+          cache: true
+
+      - name: Configure
+        shell: bash
+        env:
+          ANDROID_NDK_ROOT: ${{ env.ANDROID_HOME }}/ndk/26.1.10909125
+        run: |
+          qt-cmake -S android -B build/android -GNinja \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-28 \
+            -DANDROID_SDK_ROOT="$ANDROID_HOME" \
+            -DANDROID_NDK="$ANDROID_NDK_ROOT" \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build APK
+        run: cmake --build build/android --target apk --parallel 2
+
+      - name: Locate APK
+        if: always()
+        run: find build/android -type f -name '*.apk' -print || true
+
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ykw-editors-android-arm64
+          path: build/android/**/*.apk
+          if-no-files-found: error
